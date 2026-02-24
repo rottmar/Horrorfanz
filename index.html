@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Marboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #05060a;
+      --panel: #10131c;
+      --accent: #4fd1c5;
+      --accent-soft: rgba(79, 209, 197, 0.15);
+      --text: #f5f7ff;
+      --muted: #8b92a7;
+      --danger: #f56565;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #151a2b 0, #05060a 55%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .shell {
+      width: 100%;
+      max-width: 800px;
+      background: linear-gradient(145deg, #0b0e16, #05060a);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: radial-gradient(circle at top left, rgba(79, 209, 197, 0.25), transparent 55%);
+    }
+    .title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #48bb78;
+      box-shadow: 0 0 10px #48bb78;
+      margin-right: 6px;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* Username input */
+    input {
+      width: 200px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(5, 6, 10, 0.9);
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(79, 209, 197, 0.4);
+      background: rgba(5, 6, 10, 1);
+    }
+
+    .composer {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: radial-gradient(circle at bottom right, rgba(79, 209, 197, 0.12), transparent 60%);
+    }
+    .composer-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .composer-row {
+      display: flex;
+      gap: 10px;
+    }
+    textarea {
+      flex: 1;
+      resize: vertical;
+      min-height: 60px;
+      max-height: 160px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(5, 6, 10, 0.9);
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(79, 209, 197, 0.4);
+      background: rgba(5, 6, 10, 1);
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0 18px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #63b3ed);
+      color: #05060a;
+      box-shadow: 0 10px 25px rgba(79, 209, 197, 0.45);
+      height: 40px;
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .feed {
+      padding: 10px 0 6px;
+      max-height: 420px;
+      overflow-y: auto;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent 60%);
+    }
+    .empty {
+      padding: 40px 20px 46px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .post {
+      margin: 4px 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: radial-gradient(circle at top left, var(--accent-soft), rgba(10, 12, 20, 0.95));
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      animation: fadeIn 0.18s ease-out;
+    }
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .post-author {
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      color: #a0aec0;
+    }
+    .post-time {
+      font-size: 0.7rem;
+      color: #718096;
+    }
+    .post-body {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .post-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .btn-soft {
+      background: rgba(15, 18, 30, 0.9);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .btn-soft.danger {
+      border-color: rgba(245, 101, 101, 0.6);
+      color: var(--danger);
+    }
+
+    .footer {
+      padding: 6px 14px 10px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      background: #05060a;
+    }
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(79, 209, 197, 0.5);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="header">
+      <div>
+        <div class="title">Marboard</div>
+        <div class="subtitle">Realtime Firebase message stream</div>
+      </div>
+      <div class="status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Connecting…</span>
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="composer-label">Your username</div>
+      <input id="usernameInput" placeholder="Anonymous" />
+
+      <div class="composer-label" style="margin-top:12px;">Leave a message</div>
+      <div class="composer-row">
+        <textarea id="messageInput" placeholder="Type something hauntingly honest…"></textarea>
+        <button id="sendBtn" class="btn-primary" disabled>
+          <span>Post</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="feed" class="feed">
+      <div id="emptyState" class="empty">
+        No messages yet. Be the first echo in the dark.
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Messages are stored in Firestore.</div>
+      <div class="badge">Firebase • Realtime</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      deleteDoc,
+      doc,
+      onSnapshot,
+      orderBy,
+      query,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // ⭐ PASTE YOUR FIREBASE CONFIG HERE
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBepmKfctk9aPPXeiOABXfKLBSMtI5RwY",
+      authDomain: "marboard-9d915.firebaseapp.com",
+      projectId: "marboard-9d915",
+      storageBucket: "marboard-9d915.firebasestorage.app",
+      messagingSenderId: "972317134859",
+      appId: "1:972317134859:web:d078e7d562933e623a370e",
+      measurementId: "G-QXL7Z6D37E"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const postsRef = collection(db, "posts");
+    const postsQuery = query(postsRef, orderBy("timestamp", "desc"));
+
+    const feedEl = document.getElementById("feed");
+    const emptyStateEl = document.getElementById("emptyState");
+    const inputEl = document.getElementById("messageInput");
+    const usernameInput = document.getElementById("usernameInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const statusDot = document.getElementById("statusDot");
+    const statusText = document.getElementById("statusText");
+
+    // ⭐ Load saved username
+    usernameInput.value = localStorage.getItem("username") || "";
+
+    usernameInput.addEventListener("input", () => {
+      localStorage.setItem("username", usernameInput.value.trim());
+    });
+
+    function setStatus(online) {
+      if (online) {
+        statusDot.style.background = "#48bb78";
+        statusDot.style.boxShadow = "0 0 10px #48bb78";
+        statusText.textContent = "Live with Firestore";
+      } else {
+        statusDot.style.background = "#f56565";
+        statusDot.style.boxShadow = "0 0 10px #f56565";
+        statusText.textContent = "Offline / error";
+      }
+    }
+
+    function renderPosts(snapshot) {
+      feedEl.innerHTML = "";
+      if (snapshot.empty) {
+        feedEl.appendChild(emptyStateEl);
+        emptyStateEl.style.display = "block";
+        return;
+      }
+      emptyStateEl.style.display = "none";
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+
+        const postEl = document.createElement("div");
+        postEl.className = "post";
+
+        const headerEl = document.createElement("div");
+        headerEl.className = "post-header";
+
+        const authorEl = document.createElement("div");
+        authorEl.className = "post-author";
+        authorEl.textContent = data.username || "Anonymous";
+
+        const timeEl = document.createElement("div");
+        timeEl.className = "post-time";
+        const ts = data.timestamp?.toDate ? data.timestamp.toDate() : null;
+        timeEl.textContent = ts ? ts.toLocaleString() : "Pending…";
+
+        headerEl.appendChild(authorEl);
+        headerEl.appendChild(timeEl);
+
+        const bodyEl = document.createElement("div");
+        bodyEl.className = "post-body";
+        bodyEl.textContent = data.text;
+
+        const footerEl = document.createElement("div");
+        footerEl.className = "post-footer";
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn-soft danger";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.addEventListener("click", async () => {
+          if (!confirm("Delete this message?")) return;
+          await deleteDoc(doc(db, "posts", id));
+        });
+
+        footerEl.appendChild(deleteBtn);
+
+        postEl.appendChild(headerEl);
+        postEl.appendChild(bodyEl);
+        postEl.appendChild(footerEl);
+
+        feedEl.appendChild(postEl);
+      });
+    }
+
+    onSnapshot(
+      postsQuery,
+      snapshot => {
+        setStatus(true);
+        renderPosts(snapshot);
+      },
+      error => {
+        console.error(error);
+        setStatus(false);
+      }
+    );
+
+    async function postMessage() {
+      const text = inputEl.value.trim();
+      const username = usernameInput.value.trim() || "Anonymous";
+
+      if (!text) return;
+
+      sendBtn.disabled = true;
+
+      try {
+        await addDoc(postsRef, {
+          text,
+          username,
+          timestamp: serverTimestamp()
+        });
+        inputEl.value = "";
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    inputEl.addEventListener("input", () => {
+      sendBtn.disabled = !inputEl.value.trim();
+    });
+
+    inputEl.addEventListener("keydown", e => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        if (!sendBtn.disabled) postMessage();
+      }
+    });
+
+    sendBtn.addEventListener("click", () => {
+      if (!sendBtn.disabled) postMessage();
+    });
+
+    setStatus(false);
+  </script>
+</body>
+</html>
