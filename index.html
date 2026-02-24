@@ -248,7 +248,7 @@
     <div class="header">
       <div>
         <div class="title">Marboard</div>
-        <div class="subtitle">Realtime Firebase message stream</div>
+        <div class="subtitle">Family Chat</div>
       </div>
       <div class="status">
         <div class="status-dot" id="statusDot"></div>
@@ -262,7 +262,7 @@
 
       <div class="composer-label" style="margin-top:12px;">Leave a message</div>
       <div class="composer-row">
-        <textarea id="messageInput" placeholder="Type something hauntingly honest…"></textarea>
+        <textarea id="messageInput" placeholder="Type message here..."></textarea>
         <button id="sendBtn" class="btn-primary" disabled>
           <span>Post</span>
         </button>
@@ -276,8 +276,8 @@
     </div>
 
     <div class="footer">
-      <div>Messages are stored in Firestore.</div>
-      <div class="badge">Firebase • Realtime</div>
+      <div>By Rott</div>
+      <div class="badge"></div>
     </div>
   </div>
 
@@ -330,7 +330,7 @@
       if (online) {
         statusDot.style.background = "#48bb78";
         statusDot.style.boxShadow = "0 0 10px #48bb78";
-        statusText.textContent = "Live with Firestore";
+        statusText.textContent = "Connected";
       } else {
         statusDot.style.background = "#f56565";
         statusDot.style.boxShadow = "0 0 10px #f56565";
