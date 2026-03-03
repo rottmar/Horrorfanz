@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Horrorfanz</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #0b0b0b;
+        color: #ddd;
+    }
+
+    /* HEADER */
+    header {
+        background: #111;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 1px solid #300;
+        overflow: hidden;
+        height: 90px;
+    }
+
+    /* Canvas fog layer */
+    #fogCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        opacity: 0.35;
+        z-index: 1;
+    }
+
+    #emberCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    }
+
+
+    /* LOGO */
+    .logo {
+        font-family: "Parchment", sans-serif;
+        font-size: 125px;
+        color: white;
+        text-shadow: 0 0 10px #900, 0 0 20px #600;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* MENU BUTTON */
+    .menu-btn {
+        font-size: 26px;
+        color: #ddd;
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* NAV MENU */
+    nav {
+        background: #151515;
+        display: none;
+        flex-direction: column;
+        border-bottom: 1px solid #300;
+    }
+
+    nav a {
+        padding: 15px 20px;
+        color: #ccc;
+        text-decoration: none;
+        border-top: 1px solid #222;
+    }
+
+    nav a:hover {
+        background: #200;
+        color: red;
+    }
+
+    /* MAIN CONTENT */
+    main {
+        padding: 20px;
+        min-height: 60vh;
+    }
+
+    /* FOOTER */
+    footer {
+        background: #111;
+        padding: 15px;
+        text-align: center;
+        color: #666;
+        border-top: 1px solid #300;
+    }
+
+</style>
+
+<script>
+    function toggleMenu() {
+        const nav = document.getElementById("mobileMenu");
+        nav.style.display = nav.style.display === "flex" ? "none" : "flex";
+    }
+
+    // Canvas fog script
+window.onload = () => {
+    const fogCanvas = document.getElementById("fogCanvas");
+    const fogCtx = fogCanvas.getContext("2d");
+
+    const emberCanvas = document.getElementById("emberCanvas");
+    const emberCtx = emberCanvas.getContext("2d");
+
+    function resize() {
+        fogCanvas.width = fogCanvas.offsetWidth;
+        fogCanvas.height = fogCanvas.offsetHeight;
+
+        emberCanvas.width = emberCanvas.offsetWidth;
+        emberCanvas.height = emberCanvas.offsetHeight;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    let t = 0;
+
+    // -------------------------
+    // HELL FOG (fractal red fog)
+    // -------------------------
+
+    function smoothNoise(x, y, seed) {
+        return (
+            Math.sin((x * 0.01) + seed) +
+            Math.sin((y * 0.012) + seed * 1.3) +
+            Math.sin((x * 0.02) + (y * 0.015) + seed * 0.7)
+        ) / 3;
+    }
+
+    function fractalNoise(x, y, time) {
+        let value = 0;
+        let scale = 1;
+        let amp = 1;
+
+        for (let i = 0; i < 4; i++) {
+            value += smoothNoise(
+                x * scale + time * 15,
+                y * scale + time * 8,
+                time * 0.4
+            ) * amp;
+
+            scale *= 1.8;
+            amp *= 0.55;
+        }
+
+        return (value + 1) * 0.5;
+    }
+
+    function drawFog() {
+        t += 0.0025;
+
+        const w = fogCanvas.width;
+        const h = fogCanvas.height;
+        const img = fogCtx.createImageData(w, h);
+
+        for (let i = 0; i < img.data.length; i += 4) {
+            const x = (i / 4) % w;
+            const y = Math.floor((i / 4) / w);
+
+            const n = fractalNoise(x, y, t);
+
+            const red = n * 255;
+            const dark = n * 60;
+
+            img.data[i] = red;
+            img.data[i + 1] = dark;
+            img.data[i + 2] = dark;
+            img.data[i + 3] = 95;
+        }
+
+        fogCtx.putImageData(img, 0, 0);
+    }
+
+    // -------------------------
+    // EMBERS (glowing particles)
+    // -------------------------
+
+    const embers = [];
+
+    function spawnEmber() {
+        embers.push({
+            x: Math.random() * emberCanvas.width,
+            y: emberCanvas.height + 5,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: -0.6 - Math.random() * 0.4,
+            life: 1,
+            decay: 0.005 + Math.random() * 0.01,
+            size: 1.5 + Math.random() * 2
+        });
+    }
+
+    function drawEmbers() {
+        emberCtx.clearRect(0, 0, emberCanvas.width, emberCanvas.height);
+
+        for (let e of embers) {
+            e.x += e.vx;
+            e.y += e.vy;
+            e.life -= e.decay;
+
+            const alpha = Math.max(0, e.life);
+
+            const gradient = emberCtx.createRadialGradient(
+                e.x, e.y, 0,
+                e.x, e.y, e.size * 3
+            );
+            gradient.addColorStop(0, `rgba(255,120,50,${alpha})`);
+            gradient.addColorStop(1, `rgba(255,0,0,0)`);
+
+            emberCtx.fillStyle = gradient;
+            emberCtx.beginPath();
+            emberCtx.arc(e.x, e.y, e.size * 3, 0, Math.PI * 2);
+            emberCtx.fill();
+        }
+
+        // Remove dead embers
+        for (let i = embers.length - 1; i >= 0; i--) {
+            if (embers[i].life <= 0) embers.splice(i, 1);
+        }
+
+        // Spawn new embers
+        if (Math.random() < 0.4) spawnEmber();
+    }
+
+    // -------------------------
+    // MAIN LOOP
+    // -------------------------
+
+    function loop() {
+        drawFog();
+        drawEmbers();
+        requestAnimationFrame(loop);
+    }
+
+    loop();
+};
+</script>
+</head>
+
+<body>
+
+<header>
+    <canvas id="fogCanvas"></canvas>
+    <canvas id="emberCanvas"></canvas>
+    <div class="logo">HorrorFanz</div>
+    <div class="menu-btn" onclick="toggleMenu()">☰</div>
+</header>
+
+<nav id="mobileMenu">
+    <a href="#">Home</a>
+    <a href="#">News</a>
+    <a href="#">Reviews</a>
+    <a href="#">Gallery</a>
+    <a href="#">Contact</a>
+</nav>
+
+<main>
+    <h2>Welcome to HorrorFanz</h2>
+    <p>Your home for horror news, reviews, and fan creations.</p>
+</main>
+
+<footer>
+    © 2026 Horrorfanz. All rights reserved.
+</footer>
+
+</body>
+</html>
