@@ -97,44 +97,6 @@
         min-height: 60vh;
     }
 
-    
-    #news {
-    margin-top: 20px;
-}
-
-#latestNews {
-    margin-top: 20px;
-}
-
-#latestNewsList .newsPost {
-    background: #151515;
-    border: 1px solid #300;
-    padding: 12px 15px;
-    margin-bottom: 12px;
-    border-radius: 4px;
-}
-
-#latestNewsList .newsPost h3 {
-    margin: 0 0 6px;
-    color: #ff4444;
-}
-
-#latestNewsList .newsPost small {
-    display: block;
-    margin-top: 6px;
-    color: #777;
-    font-size: 12px;
-}
-
-.newsPost img.newsImage {
-    width: 100%;
-    max-height: 250px;
-    object-fit: cover;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    border: 1px solid #300;
-}
-
     /* FOOTER */
     footer {
         background: #111;
@@ -143,6 +105,39 @@
         color: #666;
         border-top: 1px solid #300;
     }
+
+#newsPostTool {
+    margin-top: 25px;
+    padding: 15px;
+    background: #111;
+    border: 1px solid #300;
+    border-radius: 4px;
+}
+
+#newsPostTool input,
+#newsPostTool textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    background: #050505;
+    border: 1px solid #333;
+    color: #ddd;
+    border-radius: 3px;
+}
+
+#newsPostTool button {
+    padding: 8px 14px;
+    background: #700;
+    border: none;
+    color: #eee;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+#newsPostTool button:hover {
+    background: #900;
+}
+
 
 </style>
 
@@ -292,17 +287,20 @@ window.onload = () => {
 };
 </script>
 <script type="module">
+  // Firebase v9 modular imports
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import {
     getFirestore,
     collection,
+    addDoc,
+    serverTimestamp,
     query,
     orderBy,
     onSnapshot
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // Your Firebase config
- const firebaseConfig = {
+  // TODO: paste YOUR config here
+const firebaseConfig = {
   apiKey: "AIzaSyDBepmKfctk9aPPXeiOABXfKLBSMtI5RwY",
   authDomain: "marboard-9d915.firebaseapp.com",
   projectId: "marboard-9d915",
@@ -315,17 +313,44 @@ window.onload = () => {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  function loadLatestNews() {
-    const latestNewsList = document.getElementById("latestNewsList");
+   const newsTitleInput = document.getElementById("newsTitle");
+  const newsBodyInput = document.getElementById("newsBody");
+  const newsPostButton = document.getElementById("newsPostButton");
+  const newsList = document.getElementById("newsList");
 
+  async function addNewsPost() {
+    const title = newsTitleInput.value.trim();
+    const body = newsBodyInput.value.trim();
+
+    if (!title || !body) return;
+
+    await addDoc(collection(db, "news"), {
+      title,
+      body,
+      createdAt: serverTimestamp()
+    });
+
+    await addDoc(collection(db, "news"), {
+  title,
+  body,
+  imageUrl,        // new field
+  createdAt: serverTimestamp()
+});
+
+    newsTitleInput.value = "";
+    newsBodyInput.value = "";
+  }
+
+  newsPostButton.addEventListener("click", addNewsPost);
+
+    function startNewsListener() {
     const q = query(
       collection(db, "news"),
       orderBy("createdAt", "desc")
-      // remove limit() to show all posts
     );
 
     onSnapshot(q, (snapshot) => {
-      latestNewsList.innerHTML = "";
+      newsList.innerHTML = "";
 
       snapshot.forEach((doc) => {
         const post = doc.data();
@@ -337,26 +362,19 @@ window.onload = () => {
             ? post.createdAt.toDate().toLocaleString()
             : "";
 
-        // Build image HTML only if imageUrl exists
-        const imageHTML = post.imageUrl
-          ? `<img src="${post.imageUrl}" class="newsImage" alt="News image">`
-          : "";
-
         div.innerHTML = `
-          ${imageHTML}
           <h3>${post.title}</h3>
           <p>${post.body}</p>
           <small>${date}</small>
         `;
 
-        latestNewsList.appendChild(div);
+        newsList.appendChild(div);
       });
     });
   }
 
-  loadLatestNews();
+  startNewsListener();
 </script>
-
 </head>
 
 <body>
@@ -377,12 +395,14 @@ window.onload = () => {
 </nav>
 
 <main>
-    <h2>Welcome to HorrorFanz</h2>
-    <p>Your home for horror news, reviews, and fan creations.</p>
-<section id="latestNews">
-  <h2>Latest News</h2>
-  <div id="latestNewsList"></div>
+
+<section id="newsPostTool">
+  <h3>Add News Post</h3>
+  <input id="newsTitle" placeholder="Title" />
+  <textarea id="newsBody" placeholder="Write your news..."></textarea>
+  <button id="newsPostButton">Post</button>
 </section>
+
 
 </main>
 
